@@ -77,9 +77,25 @@ void inducedSort(char* T, int* SA, int* bkt, int K, int n, bool processing_S_typ
     }
 }
 
+int problemReduction(int* SA, char** T1, int** SA1, int n) {
+  int n1 = 0;
+
+  for (int i = 0; i < n; i++) {
+    if (SA[i] > 0) {
+        SA[n1 ++] = SA[i];
+    }
+  }
+
+  *SA1 = SA;
+  *T1 = (char*)(SA + n - n1);
+
+  return n1;
+}
+
 void sacak(char* T, int* SA, int K, int n, int level) {
     int *bkt = NULL;
 
+    // Stage 1: induces sort the LMS-substrings of T
     if (level == 0) {
         bkt = new int[K];
 
@@ -104,6 +120,11 @@ void sacak(char* T, int* SA, int K, int n, int level) {
    } else {
 
     }
+
+    // SA is reused for storing T1 and SA1
+    char* T1 = NULL;
+    int* SA1 = NULL;
+    int n1 = problemReduction(SA, &T1, &SA1, n);
 
     free(bkt);
 }
