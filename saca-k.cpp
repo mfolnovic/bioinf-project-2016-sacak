@@ -141,7 +141,7 @@ void inducedSort0(uchar* T, uint* SA, uint* bkt, uint K, uint n, bool processing
 /*
   processing_type: 0 - LMS, 1 - S-type, 2 - L-type
 */
-void inducedSort1(int* T, int* SA, uint n, int processing_type) {
+void inducedSort1(int* T, int* SA, uint n, int processing_type, bool suffix) {
     int step = 1;
 
     bool processing_LMS = processing_type == 0;
@@ -247,7 +247,8 @@ void inducedSort1(int* T, int* SA, uint n, int processing_type) {
             }
         }
 
-        if ((processing_L_type && i > 0) || processing_S_type) {
+        bool is_L_type1 = (j+1 < n-1) && (T[j+1]>T[j+2] || (T[j+1] == T[j+2] && T[j+1] < i));
+        if ((processing_L_type && (!suffix || !is_L_type1) && i > 0) || (processing_S_type && !suffix)) {
             SA[step == 0 ? i - mul : i] = EMPTY;
         }
     }
@@ -497,6 +498,9 @@ void sacak(uchar* T, uint* SA, uint K, uint n, uint m, int level) {
         // Induced sort SA(T) from SA(T1), reusing the start or the end
         // of each bucket as the bucket's counter
         putSuffix1((int *)SA, (int *)T, n1);
+        inducedSort1((int*)T, (int*)SA, n, /* processing_type */ 2, /* suffix */ true);
+        printArray(SA, n);
+        inducedSort1((int*)T, (int*)SA, n, /* processing_type */ 1, /* suffix */ true);
         printArray(SA, n);
     }
 }

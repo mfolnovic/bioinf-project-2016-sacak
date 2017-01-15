@@ -502,6 +502,14 @@ void SACA_K(unsigned char *s, unsigned int *SA,
   else {
     putSuffix1((int *)SA, (int *)s, n1);
     induceSAl1((int *)SA, (int *)s, n, true);
+    for(int i = 0; i < n; i++) {
+      printf("%d ", SA[i]);
+    }
+    printf("\n");
     induceSAs1((int *)SA, (int *)s, n, true);
+    for(int i = 0; i < n; i++) {
+      printf("%d ", SA[i]);
+    }
+    printf("\n");
   }
 }
