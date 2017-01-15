@@ -47,8 +47,8 @@ int main(int argc, char **argv) {
 		fprintf( stderr, "stdout" );
 	fprintf( stderr, "\n" );
 	#if !defined( unix )
-	setmode( fileno( stdin ), O_BINARY );
-	setmode( fileno( stdout ), O_BINARY );
+	//setmode( fileno( stdin ), O_BINARY );
+	//setmode( fileno( stdout ), O_BINARY );
 	#endif
 
 	// Allocate 5 bytes memory for input string and output suffix array
@@ -81,7 +81,12 @@ int main(int argc, char **argv) {
 	double  duration;
 	start = clock();
 
+    printf("\n\n");
 	SAIS(s_ch, SA, n, 256, sizeof(char), 0);
+	for(int i = 0; i < n; i++) {
+        printf("%d ", SA[i]);
+    }
+    printf("\n");
 
 	finish = clock();
 	duration = (double)(finish - start) / CLOCKS_PER_SEC;
