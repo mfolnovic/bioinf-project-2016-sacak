@@ -48,8 +48,8 @@ int main(int argc, char **argv) {
 		fprintf(stderr, "stdout");
 	fprintf(stderr, "\n");
 	#if !defined(unix)
-	setmode(fileno(stdin), O_BINARY);
-	setmode(fileno(stdout), O_BINARY);
+	//setmode(fileno(stdin), O_BINARY);
+	//setmode(fileno(stdout), O_BINARY);
 	#endif
 
 	// Allocate 5 bytes memory for input string and output suffix array
@@ -86,8 +86,14 @@ int main(int argc, char **argv) {
 	start = clock();
 
 	fprintf(stderr, "\nConstructing the suffix array...");
+	
+    printf("\n\n");	
 	SACA_K(s_ch, SA, n, 256, n, 0);
-
+/*	for(int i = 0; i < n; i++) {
+        printf("%d ", SA[i]);
+    }
+    printf("\n");*/
+    
 	finish = clock();
 	duration = (double)(finish - start) / CLOCKS_PER_SEC;
 
