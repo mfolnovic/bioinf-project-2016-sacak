@@ -381,7 +381,6 @@ void getSALMS(uint *SA, uchar *T, uint *T1, uint n, uint n1, int level) {
     T1[j--] = n - 1;
     bool current_s_type = false;
 
-    printArray(T1, n1);
     for (int i = n-2; i > 0; i--) {
         bool previous_s_type = scan_rtl_check_S_type(T[i - 1], T[i]);
 
@@ -391,7 +390,6 @@ void getSALMS(uint *SA, uchar *T, uint *T1, uint n, uint n1, int level) {
         }
         current_s_type = previous_s_type;
     }
-    printArray(T1, n1);
 
     for (int i = 0; i < n1; i++) {
         SA[i] = T1[SA[i]];
@@ -401,6 +399,20 @@ void getSALMS(uint *SA, uchar *T, uint *T1, uint n, uint n1, int level) {
     for (int i = n1; i < n; i++) {
         SA[i] = level ? EMPTY : 0;
     }
+}
+
+
+void putSuffix0(uint *SA, uchar *T, uint *bkt, uint n, uint K, int n1) {
+    // find the ends of each bucket
+    initializeBuckets(T, bkt, K, n, true);
+
+    // put the suffixes into their buckets
+    for (int i = n1 - 1; i > 0; i--) {
+        uint j = SA[i];
+        SA[i] = 0;
+        SA[bkt[T[j]]--] = j;
+    }
+    SA[0] = n - 1; // set the sentinel
 }
 
 
@@ -460,14 +472,22 @@ void sacak(uchar* T, uint* SA, uint K, uint n, uint m, int level) {
     } else {
         sacak((uchar*) T1, SA1, K, n1, m - n1, level + 1);
     }
-
+    
     printArray(SA, n);
     // stage 4: induced sort SA(T) from SA(T1).
     getSALMS(SA, T, T1, n, n1, level);
-    printArray(SA, n);
 
-    free(bkt);
-//    printf("[%d] #1: ", level);printArray(SA, n);
+    if (level == 0) {
+        // Induced sort SA(T) from SA(T1) using bkt for bucket counters
+        printArray(SA, n);
+        putSuffix0(SA, T, bkt, n, K, n1);
+        printArray(SA, n);
+
+        free(bkt);
+    }
+    else {
+        // later
+    }
 }
 
 int main(int argc, char** argv) {
