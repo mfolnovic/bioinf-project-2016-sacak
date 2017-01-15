@@ -107,7 +107,7 @@ void fillLMSBuckets0(uchar* T, uint* SA, uint* bkt, uint K, uint n) {
     SA[0] = n - 1;
 }
 
-void inducedSort0(uchar* T, uint* SA, uint* bkt, uint K, uint n, bool processing_S_type) {
+void inducedSort0(uchar* T, uint* SA, uint* bkt, uint K, uint n, bool processing_S_type, bool suffix) {
     // initialize buckets to start/end of each bucket
     initializeBuckets(T, bkt, K, n, /* set_to_end */ processing_S_type);
 
@@ -132,7 +132,7 @@ void inducedSort0(uchar* T, uint* SA, uint* bkt, uint K, uint n, bool processing
                 // ... and increase/decrease bkt[c] by 1
                 bkt[c] += processing_S_type ? -1 : 1;
 
-                if (i > 0) SA[i] = 0;
+                if (!suffix && (processing_S_type || (!processing_S_type && i > 0))) SA[i] = 0;
             }
         }
     }
@@ -435,12 +435,12 @@ void sacak(uchar* T, uint* SA, uint K, uint n, uint m, int level) {
         // compute into bkt[0, K-1] the start position of each bucket in SA. Scan
         // SA once from left to right to induces sort the L-type suffixes of T
         // into their buckets in SA, from the start to the end in each bucket.
-        inducedSort0(T, SA, bkt, K, n, /* processing_S_type */ false);
+        inducedSort0(T, SA, bkt, K, n, /* processing_S_type */ false, /* suffix */ false);
 
         // compute into bkt[0, K-1] the end position of each bucket in SA. Scan
         // SA once from right to left to induces sort the S-type suffixes of T
         // into their buckets in SA, from the end to the start in each bucket.
-        inducedSort0(T, SA, bkt, K, n, /* processing_S_type */ true);
+        inducedSort0(T, SA, bkt, K, n, /* processing_S_type */ true, /* suffix */ false);
     } else {
         printArray(SA, n);
         printArray(T, n);
@@ -473,16 +473,19 @@ void sacak(uchar* T, uint* SA, uint K, uint n, uint m, int level) {
         sacak((uchar*) T1, SA1, K, n1, m - n1, level + 1);
     }
     
-    printArray(SA, n);
     // stage 4: induced sort SA(T) from SA(T1).
     getSALMS(SA, T, T1, n, n1, level);
 
     if (level == 0) {
+        printArray(SA, n);
+        
         // Induced sort SA(T) from SA(T1) using bkt for bucket counters
-        printArray(SA, n);
         putSuffix0(SA, T, bkt, n, K, n1);
+        inducedSort0(T, SA, bkt, K, n, /* processing_S_type */ false, /* suffix */ true);
+        inducedSort0(T, SA, bkt, K, n, /* processing_S_type */ true, /* suffix */ true);
+        
         printArray(SA, n);
-
+        // Free the space allocated for bkt
         free(bkt);
     }
     else {

@@ -485,31 +485,26 @@ void SACA_K(unsigned char *s, unsigned int *SA,
     for(i=0; i<n1; i++) SA1[s1[i]]=i;
 
   // stage 3: induce SA(S) from SA(S1).
-
-  printf("Before getSAlms:\n")
-  for(int i = 0; i < n; i++) {
-      printf("%d ", SA[i]);
-  }
-  printf("\n");
-  
   getSAlms(SA, s, s1, n, n1, level);
-
-  printf("After getSAlms:\n")
-  for(int i = 0; i < n; i++) {
-      printf("%d ", SA[i]);
-  }
-  printf("\n");
 
   if(level==0) {
     putSuffix0(SA, s, bkt, n, K, n1);
+    
     printf("After putSuffix0:\n")
     for(int i = 0; i < n; i++) {
-        printf("%d ", SA[i]);
+      printf("%d ", SA[i]);
     }
     printf("\n");
-    
+
     induceSAl0(SA, s, bkt, n, K, true);
     induceSAs0(SA, s, bkt, n, K, true);
+
+    printf("End of stage 4:\n")
+    for(int i = 0; i < n; i++) {
+      printf("%d ", SA[i]);
+    }
+    printf("\n");
+
     free(bkt);
   }
   else {
