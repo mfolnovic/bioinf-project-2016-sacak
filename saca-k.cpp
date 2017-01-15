@@ -8,41 +8,97 @@ typedef unsigned int uint;
 // least negative integer
 const uint EMPTY = ((uint)1)<<(sizeof(uint)*8-1);
 
+#define scan_rtl_check_S_type(prev, curr) (prev < curr || (prev == curr && current_s_type))
+#define scan \
+                for (uint i = processing_S_type ? n - 1 : 0; \
+                     processing_S_type ? i > 0 : i < n; \
+                     processing_S_type ? i -- : i ++)
+
+#define scan_complex(is_processing_S_type, is_processing_LMS, step) \
+                for (uint i = is_processing_S_type ? n - 1 : (is_processing_LMS ? n -2 : 0); \
+                     is_processing_S_type | is_processing_LMS ? i > 0 : i < n; \
+                     is_processing_S_type | is_processing_LMS ? i -= step : i += step)
+
+
+inline void printArray(void* arr, int n) {
+    for (int i = 0; i < n; i++) {
+        printf ("%d ", ((int*)arr)[i]);
+    }
+    printf("\n");
+}
+
+inline uint shiftValue(int *SA, int start, int direction) {
+    uint count = 0, i;
+    // The end item of the left/right-neighbouring bucket can be found by
+    // scanning from SA[start] to the left/right, until we see the first item
+    // SA[i] that is negative for being reused as a counter.
+    for (i = start + direction;
+         SA[i] >= 0;
+         i += direction, count += 1);
+
+    int *source, *destination;
+    if (direction > 0) {
+        source = SA + start;
+        destination = source + 1;
+    } else {
+        source = SA + start - count;
+        destination = source - 1;
+    }
+
+//        printf("%d [%d %d %d]\n", count, *source, *destination, SA[start]);
+    // Having found SA[x], we shift-left/right one step all the items in SA[x + 1, c]
+    // to SA[x, c-1] and set SA[c] as empty.
+    memmove((void*)destination, (const void*)source, sizeof(int) * (count + 1));
+
+    return i;
+}
+
+inline int shiftCount(int *SA, int start, int count, int direction) {
+    for (int i = 0; i < count; i++) {
+        SA[start + i*direction] = SA[start + (i + 1) * direction];
+    }
+    return count;
+}
+
 void initializeBuckets(uchar* T, uint* bkt, uint K, uint n, bool set_to_end) {
     memset(bkt, 0, sizeof(uint) * K);
 
-    for (int i = 0; i < n; i++) {
+    // count each character from alphabet
+    for (uint i = 0; i < n; i++) {
         bkt[T[i]] += 1;
     }
 
     uint end_index = -1;
     uint begin_index = 0;
-    for (int i = 0; i < K; i++) {
+    for (uint i = 0; i < K; i++) {
         int current = bkt[i];
 
         end_index += current;
+        // set index to start/end of the bucket
         bkt[i] = set_to_end ? end_index : begin_index;
         begin_index += current;
     }
 }
 
-void initializeSA(uint* SA, uint n) {
+inline void initializeSA(uint* SA, uint n) {
     memset(SA, 0, sizeof(uint) * n);
 }
 
-void fillLMSBuckets(uchar* T, uint* SA, uint* bkt, uint K, uint n) {
+void fillLMSBuckets0(uchar* T, uint* SA, uint* bkt, uint K, uint n) {
     bool current_s_type = false;
 
     // initialize buckets to end of each bucket
     initializeBuckets(T, bkt, K, n, /* set_to_end */ true);
 
+    // scan LMS right to left
     for (int i = n-2; i > 0; i--) {
-        bool previous_s_type = T[i - 1] < T[i] || (T[i - 1] == T[i] && current_s_type);
+        uchar prev = T[i - 1], curr = T[i];
+        bool previous_s_type = scan_rtl_check_S_type(prev, curr);
 
         // if LMS
         if (!previous_s_type && current_s_type) {
-            SA[bkt[T[i]]] = i;
-            bkt[T[i]] -= 1;
+            SA[bkt[curr]] = i;
+            bkt[curr] -= 1; // decrease counter
         }
 
         current_s_type = previous_s_type;
@@ -51,7 +107,7 @@ void fillLMSBuckets(uchar* T, uint* SA, uint* bkt, uint K, uint n) {
     SA[0] = n - 1;
 }
 
-void inducedSort(uchar* T, uint* SA, uint* bkt, uint K, uint n, bool processing_S_type) {
+void inducedSort0(uchar* T, uint* SA, uint* bkt, uint K, uint n, bool processing_S_type) {
     // initialize buckets to start/end of each bucket
     initializeBuckets(T, bkt, K, n, /* set_to_end */ processing_S_type);
 
@@ -59,21 +115,20 @@ void inducedSort(uchar* T, uint* SA, uint* bkt, uint K, uint n, bool processing_
         bkt[0] += 1;
     }
 
-    for (int i = processing_S_type ? n - 1 : 0;
-         processing_S_type ? i > 0 : i < n;
-         processing_S_type ? i-- : i++) {
+    scan {
         // for each scanned non-empty item SA[i]
         if (SA[i] > 0) {
             uint j = SA[i] - 1;
-            uchar c = T[j];
+            uchar c, curr, next;
+            c = curr = T[j], next = T[j + 1];
 
-            bool is_S_type = T[j] <= T[j + 1] && bkt[T[j]] < i;
-            bool is_L_type = T[j] >= T[j + 1];
+            bool is_S_type = curr <= next && bkt[T[j]] < i;
+            bool is_L_type = curr >= next;
 
             // if T[j] is L-type/S-type
             if ((processing_S_type && is_S_type) || (!processing_S_type && is_L_type)) {
                 // set SA[bkt[c]] = j
-                SA[bkt[c]] = j;
+                SA[bkt[curr]] = j;
                 // ... and increase/decrease bkt[c] by 1
                 bkt[c] += processing_S_type ? -1 : 1;
 
@@ -83,24 +138,159 @@ void inducedSort(uchar* T, uint* SA, uint* bkt, uint K, uint n, bool processing_
     }
 }
 
-uint problemReduction(uint* SA, uint** T1, uint** SA1, uint n) {
-  uint n1 = 0;
+/*
+  processing_type: 0 - LMS, 1 - S-type, 2 - L-type
+*/
+void inducedSort1(int* T, int* SA, uint n, int processing_type) {
+    int step = 1;
 
-  for (int i = 0; i < n; i++) {
-    if (SA[i] > 0) {
-        SA[n1 ++] = SA[i];
+    bool processing_LMS = processing_type == 0;
+    bool processing_S_type = processing_type == 1;
+    bool processing_L_type = processing_type == 2;
+    int mul = processing_LMS || processing_S_type ? -1 : 1;
+
+//    if (processing_S_type) { printf("#10: "); printArray(SA, n); }
+//    if (processing_L_type) { printf("#11: "); printArray(SA, n); }
+
+    if (processing_LMS) {
+        // initialize each item of SA[0, N-1] as empty
+        for (uint i = 0; i < n; i++) {
+            SA[i] = EMPTY;
+        }
     }
-  }
 
-  *SA1 = SA;
-  *T1 = SA + n - n1;
+//    printf("#43: "); printArray(SA, n);
+    bool current_s_type = false;
+    scan_complex(processing_S_type, processing_LMS, step) {
+        step = 1;
+        if (!processing_LMS && SA[i] <= 0) continue;
 
-  return n1;
+        uint j;
+        int curr;
+        bool is_S_type = false, is_L_type = false, is_LMS = false;
+        if (processing_LMS) {
+            j = i;
+            curr = T[j]; int prev = T[j - 1];
+            bool previous_s_type = scan_rtl_check_S_type(prev, curr);
+            is_LMS = !previous_s_type && current_s_type;
+            current_s_type = previous_s_type;
+        } else {
+            j = SA[i] - 1;
+            curr = T[j]; int next = T[j + 1];
+            is_S_type = curr < next || (curr == next && curr > (int)i);
+            is_L_type = curr >= next;
+        }
+
+//        if (processing_S_type) printf("%d %d %d %d\n", i, T[j], T[j+1], is_S_type);
+        if ((processing_LMS && !is_LMS) || (processing_S_type && !is_S_type) || (processing_L_type && !is_L_type)) {
+            continue;
+        }
+
+//        printf("#47: %d %d %d\n", i, T[i], SA[T[i]]);
+        int d = SA[curr];
+        // if SA[curr] stores suffix index
+        if (d >= 0) {
+//            printf("%d %d %d\n", mul, curr, SA[curr]);
+//            printArray(mul < 0 ? SA + curr : SA + curr - 10, 15);
+            // ... then SA[curr] is "borrowed" by the right-neighbouring bucket
+            // (of bucket(SA, T, j)). In this case, SA[curr] is storing the smallest
+            // item in right-neighbouring bucket, and we need to shift-right one step
+            // all the items in the right-neighbouring bucket to their correct locations
+            // in SA.
+            uint h = shiftValue(SA, curr, -mul);
+//            printArray(mul < 0 ? SA + curr : SA + curr - 10, 15);
+            if ((processing_S_type && h > i) || (processing_L_type && h < i)) {
+                step = 0;
+            }
+            d = SA[curr] = EMPTY;
+        }
+
+        // if SA[curr] stores empty value...
+        if ((uint)d == EMPTY) {
+            // ... then suf(T, j) is the first suffix being put into its bucket. In this case
+            //, we further check SA[curr +- 1] to see if it is empty or not. If it is...
+            if (((processing_LMS || processing_S_type) && (uint)SA[curr - 1] == EMPTY) || (processing_L_type && (uint)curr < n - 1 && (uint)SA[curr + 1] == EMPTY)) {
+                // ... we sort suf(T, j) into SA[curr +- 1] by settings SA[curr +- 1] = j and
+                // start to reuse SA[curr] as a counter by setting SA[curr] = -1.
+                SA[curr + mul] = j;
+                SA[curr] = -1;
+            } else {
+                // Otherwise, SA[curr - 1] may be non-negative for a suffix index or negative
+                // for a counter, and suf(T, j) must be the only element of its bucket, we hence
+                // simply put suf(T, j) into its bucket by settings SA[curr] = j
+                SA[curr] = j;
+            }
+        } else { // else SA[curr] stores bucket counter
+            // In this case, let d = SA[curr] and pos = c - d + 1 / c + d - 1, then SA[pos] is
+            // the item that suf(T, j) should be stored into. However, suf(T, j) may be the
+            // smallest/largest suffix in its bucket. Therefore, we further check the value
+            // of SA[pos] to proceed as follows.
+            uint pos = curr - mul * (d - 1);
+            if ((uint)SA[pos] == EMPTY && (!processing_L_type || pos <= n-1)) {
+                // if SA[pos] is empty, we simply put suf(T, j) into its bucket by setting
+                // SA[pos] = j, and increase the counter of its bucket by 1, i.e.
+                // SA[curr] = SA[curr] - 1 (notice that SA[curr] is negative for a counter).
+                SA[curr] -= 1;
+                SA[pos] = j;
+            } else {
+                // Otherwise, it indicates that SA[pos] is the start item of the
+                // right-neighbouring bucket, which must be currently non-negative for a
+                // suffix index or negative for a counter. Hence, we need to shift-left/right
+                // one step the items in SA[pos + 1, curr - 1]/SA[curr + 1, pos - 1] to
+                // SA[pos + 2, curr]/SA[curr, pos - 2], then sort suf(T, j) into
+                // its bucket by setting SA[pos -+ 1] = j
+                shiftCount(SA, curr, -d, mul);
+                SA[pos - mul] = j;
+                if ((processing_S_type && T[j] > (int)i) || (processing_L_type && (uint)curr < i)) {
+                    step = 0;
+                }
+            }
+        }
+
+        if ((processing_L_type && i > 0) || processing_S_type) {
+            SA[step == 0 ? i - mul : i] = EMPTY;
+        }
+    }
+
+//    if (processing_LMS) printArray(SA, n);
+//    if (processing_L_type) { printf("#14: "); printArray(SA, n); }
+    if (processing_LMS || processing_L_type) {
+        // scan to shift-right the items in each bucket
+        // with its head being reused as a counter
+        processing_S_type |= processing_LMS;
+        scan {
+            int j = SA[i];
+            if (j < 0 && (uint)j != EMPTY) { // SA[i] stores bucket counter
+                //printf("%d %d %d\n", i, -j, mul, i + -j * mul);
+                shiftCount(SA, i, -j, mul);
+                SA[i + -j * mul] = EMPTY;
+            }
+        }
+    }
+
+    if (processing_LMS) {
+        SA[0] = n - 1;
+    }
 }
 
-uint computeLexicographicNames(uchar* T, uint* T1, uint* SA, uint n, uint n1) {
+uint problemReduction(uint* SA, uint** T1, uint** SA1, uint n, uint m, int level) {
+    uint n1 = 0;
+
+    for (uint i = 0; i < n; i++) {
+        if (SA[i] > 0) {
+            SA[n1 ++] = SA[i];
+        }
+    }
+
+    *SA1 = SA;
+    *T1 = SA + m - n1;
+
+    return n1;
+}
+
+uint computeLexicographicNames(uchar* T, uint* T1, uint* SA, uint n, uint m, uint n1, int level) {
     // init
-    for (int i = n1; i < n; i++) {
+    for (uint i = n1; i < n; i++) {
         SA[i] = EMPTY;
     }
 
@@ -110,14 +300,15 @@ uint computeLexicographicNames(uchar* T, uint* T1, uint* SA, uint n, uint n1) {
     // of its bucket in SA_1)
     int previous_lms_length = 0, previous_x = 0;
     int current_name = 0, n_names = 0;
-    for (int j = 0; j < n1; j++) {
+//    printArray(SA, n1);
+    for (uint j = 0; j < n1; j++) {
         int x = SA[j];
         int lms_length = 1;
 
         // traverse the LMS-substring from its first character T[x] until we
         // see a character T[x + i] less than its preceding T[x + i - 1]. Now,
         // T[x + i - 1] must be L-type.
-        int i;
+        uint i;
         for (i = 1; x + i < n && T[x + i] >= T[x + i - 1]; i++);
 
         // Continue to traverse the remaining characters of the LMS-substring
@@ -126,7 +317,7 @@ uint computeLexicographicNames(uchar* T, uint* T1, uint* SA, uint n, uint n1) {
         // we know that the start of the succeeding LMS-substring has been
         // traversed and its position was previously recorded when we saw
         // T[x + i] < T[x + i - 1] the last time.
-        for (; x + i < n && T[x + i] <= T[x + i - 1]; i++) {
+        for (; x + i <= n && T[x + i] <= T[x + i - 1]; i++) {
             if (x + i == n - 1 || T[x + i] > T[x + i - 1]) {
                 lms_length = i + 1;
             }
@@ -137,13 +328,12 @@ uint computeLexicographicNames(uchar* T, uint* T1, uint* SA, uint n, uint n1) {
         if (lms_length != previous_lms_length) is_different = true;
         else {
             for (int offset = 0; offset < lms_length && !is_different; offset++) {
-                int current_pos = x + offset;
-                int previous_pos = previous_x + offset;
+                uint current_pos = x + offset;
+                uint previous_pos = previous_x + offset;
                 is_different = current_pos == n - 1 || previous_pos == n - 1 ||
                     T[current_pos] != T[previous_pos];
             }
         }
-
         if (is_different) {
             // it's different so create new name...
             current_name = j;
@@ -161,15 +351,16 @@ uint computeLexicographicNames(uchar* T, uint* T1, uint* SA, uint n, uint n1) {
         SA[n1 + x/2] = current_name;
     }
 
+//    printArray(SA, n1);
     // compact...
-    for (int i = n - 1, j = n - 1; i >= n1; i--)
+    for (uint i = n - 1, j = m - 1; i >= n1; i--)
         if (SA[i] != EMPTY) SA[j--] = SA[i];
 
     // Scan Z_1 once from right to left to replace each S-type character in Z1
     // by the end position of its bucket in SA_1, resulting in the new string T1.
     bool current_s_type = false;
     for (int i = n1-1; i > 0; i--) {
-        bool previous_s_type = T[i - 1] < T[i] || (T[i - 1] == T[i] && current_s_type);
+        bool previous_s_type = scan_rtl_check_S_type(T1[i - 1], T1[i]);
 
         // if S-type
         if (previous_s_type) {
@@ -183,7 +374,7 @@ uint computeLexicographicNames(uchar* T, uint* T1, uint* SA, uint n, uint n1) {
     return n_names;
 }
 
-void sacak(uchar* T, uint* SA, uint K, uint n, int level) {
+void sacak(uchar* T, uint* SA, uint K, uint n, uint m, int level) {
     uint *bkt = NULL;
 
     // Stage 1: induces sort the LMS-substrings of T
@@ -197,28 +388,51 @@ void sacak(uchar* T, uint* SA, uint K, uint n, int level) {
         // SA[0, N-1] once from right to left to put all the sorted LMS-suffixes
         // of T into their buckets in SA, from the end to the start in each
         // bucket.
-        fillLMSBuckets(T, SA, bkt, K, n);
+        fillLMSBuckets0(T, SA, bkt, K, n);
 
         // compute into bkt[0, K-1] the start position of each bucket in SA. Scan
         // SA once from left to right to induces sort the L-type suffixes of T
         // into their buckets in SA, from the start to the end in each bucket.
-        inducedSort(T, SA, bkt, K, n, /* processing_S_type */ false);
+        inducedSort0(T, SA, bkt, K, n, /* processing_S_type */ false);
 
         // compute into bkt[0, K-1] the end position of each bucket in SA. Scan
         // SA once from right to left to induces sort the S-type suffixes of T
         // into their buckets in SA, from the end to the start in each bucket.
-        inducedSort(T, SA, bkt, K, n, /* processing_S_type */ true); 
+        inducedSort0(T, SA, bkt, K, n, /* processing_S_type */ true);
     } else {
+//        printf("[%d] #91: ", level);printArray(SA, n);
+//        printf("[%d] #92: ", level);printArray(T, n);
 
+        // induced sort all the LMS-substrings of T, reusing the start or
+        // the end of each bucket as the bucket's counter
+        inducedSort1((int*)T, (int*)SA, n, /* processing_type */ 0); //printArray(SA, n); exit(0);
+        inducedSort1((int*)T, (int*)SA, n, /* processing_type */ 2);
+        inducedSort1((int*)T, (int*)SA, n, /* processing_type */ 1);
+//        printf("[%d] #90: ", level);printArray(SA, n);
     }
 
     // SA is reused for storing T1 and SA1
     uint* T1 = NULL;
     uint* SA1 = NULL;
-    uint n1 = problemReduction(SA, &T1, &SA1, n);
-    uint K1 = computeLexicographicNames(T, T1, SA, n, n1);
+//    printf("[%d] #42: ", level), printArray(SA, n);
+//    printf("[%d] #43: ", level), printArray(T, n);
+    uint n1 = problemReduction(SA, &T1, &SA1, n, m, level);
+//    printf("[%d] #9: %d \n", level, n1);
+    uint K1 = computeLexicographicNames(T, T1, SA, n, m, n1, level);
+//    printf("[%d] #2: ", level);printArray(SA, n);
+//    printf("[%d] #3: ", level);printArray(SA1, n);
+//    printf("[%d] #4: ", level);printArray(T1, n1);
+
+    // stage 3: sort recursively
+    if (K1 == n1) {
+        // Directly compute SA(T1) from T1
+        for (uint i = 0; i < n1; i++) SA1[T1[i]] = i;
+    } else {
+        sacak((uchar*) T1, SA1, K, n1, m - n1, level + 1);
+    }
 
     free(bkt);
+//    printf("[%d] #1: ", level);printArray(SA, n);
 }
 
 int main(int argc, char** argv) {
@@ -235,7 +449,7 @@ int main(int argc, char** argv) {
     fread(T, sizeof(uchar), n - 1, in); // read input string
     T[n - 1] = 0; // sentinel
 
-    sacak(T, SA, 256, n, 0);
+    sacak(T, SA, 256, n, n, 0);
 
     // free allocated memory
     free(T);
