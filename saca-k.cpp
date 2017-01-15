@@ -10,6 +10,7 @@ typedef unsigned int uint;
 const uint EMPTY = ((uint)1)<<(sizeof(uint)*8-1);
 
 #define scan_rtl_check_S_type(prev, curr) (prev < curr || (prev == curr && current_s_type))
+
 #define scan \
                 for (uint i = processing_S_type ? n - 1 : 0; \
                      processing_S_type ? i > 0 : i < n; \
@@ -28,14 +29,14 @@ inline void printArray(void* arr, int n) {
     printf("\n");
 }
 
-inline uint shiftValue(int *SA, int start, int direction) {
+inline int shiftValue(int *SA, int start, int direction, bool check_empty) {
     uint count = 0, i;
     // The end item of the left/right-neighbouring bucket can be found by
     // scanning from SA[start] to the left/right, until we see the first item
     // SA[i] that is negative for being reused as a counter.
     for (i = start + direction;
-         SA[i] >= 0;
-         i += direction, count += 1);
+        SA[i] >= 0 || (check_empty && SA[i] == EMPTY);
+        i += direction, count += 1);
 
     int *source, *destination;
     if (direction > 0) {
@@ -189,7 +190,7 @@ void inducedSort1(int* T, int* SA, uint n, int processing_type, bool suffix) {
             // item in right-neighbouring bucket, and we need to shift-right one step
             // all the items in the right-neighbouring bucket to their correct locations
             // in SA.
-            uint h = shiftValue(SA, curr, -mul);
+            uint h = shiftValue(SA, curr, -mul, /* check_empty */ !processing_LMS);
             if ((processing_S_type && h > i) || (processing_L_type && h < i)) {
                 step = 0;
             }
@@ -244,7 +245,7 @@ void inducedSort1(int* T, int* SA, uint n, int processing_type, bool suffix) {
         }
     }
 
-    if (processing_LMS || processing_L_type) {
+    if (processing_LMS || processing_L_type || !suffix) {
         // scan to shift-right the items in each bucket
         // with its head being reused as a counter
         processing_S_type |= processing_LMS;
