@@ -300,7 +300,7 @@ uint computeLexicographicNames(uchar* T, uint* T1, uint* SA, uint n, uint m, uin
     // of its bucket in SA_1)
     int previous_lms_length = 0, previous_x = 0;
     int current_name = 0, n_names = 0;
-//    printArray(SA, n1);
+    // printArray(SA, n1);
     for (uint j = 0; j < n1; j++) {
         int x = SA[j];
         int lms_length = 1;
@@ -374,6 +374,36 @@ uint computeLexicographicNames(uchar* T, uint* T1, uint* SA, uint n, uint m, uin
     return n_names;
 }
 
+
+// finds LMS positions in T and stores it in T1 (in text order)
+void getSALMS(uint *SA, uchar *T, uint *T1, uint n, uint n1, int level) {
+    uint j = n1 - 1;
+    T1[j--] = n - 1;
+    bool current_s_type = false;
+
+    printArray(T1, n1);
+    for (int i = n-2; i > 0; i--) {
+        bool previous_s_type = scan_rtl_check_S_type(T[i - 1], T[i]);
+
+        // if LMS
+        if (!previous_s_type && current_s_type) {
+            T1[j--] = i;
+        }
+        current_s_type = previous_s_type;
+    }
+    printArray(T1, n1);
+
+    for (int i = 0; i < n1; i++) {
+        SA[i] = T1[SA[i]];
+    }
+
+    // re-initialize SA[n1..n-1]
+    for (int i = n1; i < n; i++) {
+        SA[i] = level ? EMPTY : 0;
+    }
+}
+
+
 void sacak(uchar* T, uint* SA, uint K, uint n, uint m, int level) {
     uint *bkt = NULL;
 
@@ -400,15 +430,15 @@ void sacak(uchar* T, uint* SA, uint K, uint n, uint m, int level) {
         // into their buckets in SA, from the end to the start in each bucket.
         inducedSort0(T, SA, bkt, K, n, /* processing_S_type */ true);
     } else {
-//        printf("[%d] #91: ", level);printArray(SA, n);
-//        printf("[%d] #92: ", level);printArray(T, n);
+        printArray(SA, n);
+        printArray(T, n);
 
         // induced sort all the LMS-substrings of T, reusing the start or
         // the end of each bucket as the bucket's counter
         inducedSort1((int*)T, (int*)SA, n, /* processing_type */ 0); //printArray(SA, n); exit(0);
         inducedSort1((int*)T, (int*)SA, n, /* processing_type */ 2);
         inducedSort1((int*)T, (int*)SA, n, /* processing_type */ 1);
-//        printf("[%d] #90: ", level);printArray(SA, n);
+        printArray(SA, n);
     }
 
     // SA is reused for storing T1 and SA1
@@ -430,6 +460,11 @@ void sacak(uchar* T, uint* SA, uint K, uint n, uint m, int level) {
     } else {
         sacak((uchar*) T1, SA1, K, n1, m - n1, level + 1);
     }
+
+    printArray(SA, n);
+    // stage 4: induced sort SA(T) from SA(T1).
+    getSALMS(SA, T, T1, n, n1, level);
+    printArray(SA, n);
 
     free(bkt);
 //    printf("[%d] #1: ", level);printArray(SA, n);
