@@ -268,7 +268,7 @@ uint problemReduction(uint* SA, uint** T1, uint** SA1, uint n, uint m, int level
     uint n1 = 0;
 
     for (uint i = 0; i < n; i++) {
-        if (SA[i] > 0) {
+        if ((!level && SA[i] > 0) || (level && ((int*)SA)[i] > 0)) {
             SA[n1 ++] = SA[i];
         }
     }
