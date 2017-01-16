@@ -97,7 +97,8 @@ void initializeBuckets(uchar* T, uint* bkt, uint K, uint n, bool set_to_end) {
     }
 }
 
-// Computes the end of each bucket in SA and puts the sorted LMS-suffixes from T into their corresponding bucket in SA, from the end to the start of each bucket.
+// Computes the end of each bucket in SA and puts the sorted LMS-suffixes from T into
+// their corresponding bucket in SA, from the end to the start of each bucket.
 // author: mfolnovic
 void fillLMSBuckets0(uchar* T, uint* SA, uint* bkt, uint K, uint n) {
     bool current_s_type = false;
@@ -155,7 +156,8 @@ void inducedSort0(uchar* T, uint* SA, uint* bkt, uint K, uint n, bool processing
     }
 }
 
-// Performs induced sorting of LMS-substrings or suffixes (depending on the flag) at level 1. The parameter processing_type is defined as follows: 0 - LMS, 1 - S-type, 2 - L-type.
+// Performs induced sorting of LMS-substrings or suffixes (depending on the flag) at level > 0.
+// The parameter processing_type is defined as follows: 0 - LMS, 1 - S-type, 2 - L-type.
 // author: pgombar
 void inducedSort1(int* T, int* SA, uint n, int processing_type, bool suffix) {
     int step = 1;
@@ -193,7 +195,8 @@ void inducedSort1(int* T, int* SA, uint n, int processing_type, bool suffix) {
             is_L_type = curr >= next;
         }
 
-        if ((processing_LMS && !is_LMS) || (processing_S_type && !is_S_type) || (processing_L_type && !is_L_type)) {
+        if ((processing_LMS && !is_LMS) || (processing_S_type && !is_S_type) ||
+            (processing_L_type && !is_L_type)) {
             continue;
         }
 
@@ -216,7 +219,8 @@ void inducedSort1(int* T, int* SA, uint n, int processing_type, bool suffix) {
         if ((uint)d == EMPTY) {
             // ... then suf(T, j) is the first suffix being put into its bucket. In this case
             //, we further check SA[curr +- 1] to see if it is empty or not. If it is...
-            if (((processing_LMS || processing_S_type) && (uint)SA[curr - 1] == EMPTY) || (processing_L_type && (uint)curr < n - 1 && (uint)SA[curr + 1] == EMPTY)) {
+            if (((processing_LMS || processing_S_type) && (uint)SA[curr - 1] == EMPTY) ||
+                 (processing_L_type && (uint)curr < n - 1 && (uint)SA[curr + 1] == EMPTY)) {
                 // ... we sort suf(T, j) into SA[curr +- 1] by settings SA[curr +- 1] = j and
                 // start to reuse SA[curr] as a counter by setting SA[curr] = -1.
                 SA[curr + mul] = j;
@@ -255,7 +259,8 @@ void inducedSort1(int* T, int* SA, uint n, int processing_type, bool suffix) {
         }
 
         bool is_L_type1 = (j+1 < n-1) && (T[j+1]>T[j+2] || (T[j+1] == T[j+2] && T[j+1] < i));
-        if ((processing_L_type && (!suffix || !is_L_type1) && i > 0) || (processing_S_type && !suffix)) {
+        if ((processing_L_type && (!suffix || !is_L_type1) && i > 0) ||
+            (processing_S_type && !suffix)) {
             SA[step == 0 ? i - mul : i] = EMPTY;
         }
     }
@@ -391,7 +396,8 @@ void getSALMS(uint *SA, uchar *T, uint *T1, uint n, uint n1, int level) {
     bool current_s_type = false;
 
     for (int i = n-2; i > 0; i--) {
-        bool previous_s_type = convert(i - 1) < convert(i) || (convert(i - 1) == convert(i) && current_s_type);
+        bool previous_s_type = convert(i - 1) < convert(i) ||
+                              (convert(i - 1) == convert(i) && current_s_type);
 
         // if LMS
         if (!previous_s_type && current_s_type) {
@@ -425,7 +431,7 @@ void putSuffix0(uint *SA, uchar *T, uint *bkt, uint n, uint K, int n1) {
     SA[0] = n - 1; // set the sentinel
 }
 
-// Puts suffixes in place in SA at level 1.
+// Puts suffixes in place in SA at level > 0.
 // author: pgombar
 void putSuffix1(int *SA, int *T, int n1) {
     int pos, curr, prev = -1;
