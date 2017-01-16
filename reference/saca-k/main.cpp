@@ -87,7 +87,7 @@ int main(int argc, char **argv) {
 
 	fprintf(stderr, "\nConstructing the suffix array...");
 	
-    printf("\n\n");	
+    //printf("\n\n");	
 	SACA_K(s_ch, SA, n, 256, n, 0);
 /*	for(int i = 0; i < n; i++) {
         printf("%d ", SA[i]);
@@ -104,11 +104,11 @@ int main(int argc, char **argv) {
 	fprintf(stderr, "\nSorted: %d", (int)isSorted(SA+1, s_ch, n-1));
 #endif
 
-/*
+
   fprintf(stderr, "\nOutputing the suffix array...");
 	for(unsigned int i=1; i<n; i++)
 		fwrite((unsigned char *)(SA+i), 1, sizeof(int), stdout);
-*/
+
 
 	delete [] SA;
 	delete [] s_ch;

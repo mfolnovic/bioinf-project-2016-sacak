@@ -483,10 +483,10 @@ void SACA_K(unsigned char *s, unsigned int *SA,
           n1, 0, m-n1, level+1);
   else { // get the suffix array of s1 directly.
     for(i=0; i<n1; i++) SA1[s1[i]]=i;
-    for(int i = 0; i < n; i++) {
+/*    for(int i = 0; i < n; i++) {
       printf("%d ", SA[i]);
     }
-    printf("\n");
+    printf("\n");*/
   }
 
   // stage 3: induce SA(S) from SA(S1).
@@ -502,14 +502,14 @@ void SACA_K(unsigned char *s, unsigned int *SA,
   else {
     putSuffix1((int *)SA, (int *)s, n1);
     induceSAl1((int *)SA, (int *)s, n, true);
-    for(int i = 0; i < n; i++) {
+/*    for(int i = 0; i < n; i++) {
       printf("%d ", SA[i]);
     }
-    printf("\n");
+    printf("\n");*/
     induceSAs1((int *)SA, (int *)s, n, true);
-    for(int i = 0; i < n; i++) {
+    /*for(int i = 0; i < n; i++) {
       printf("%d ", SA[i]);
     }
-    printf("\n");
+    printf("\n");*/
   }
 }
