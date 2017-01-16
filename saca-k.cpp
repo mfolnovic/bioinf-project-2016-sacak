@@ -32,7 +32,7 @@ inline void printArray(void* arr, int n) {
     printf("\n");
 }
 
-inline int shiftValue(int *SA, int start, int direction, bool check_empty) {
+inline uint shiftValue(int *SA, int start, int direction, bool check_empty) {
     uint count = 0, i;
     // The end item of the left/right-neighbouring bucket can be found by
     // scanning from SA[start] to the left/right, until we see the first item
@@ -353,7 +353,7 @@ uint computeLexicographicNames(uchar* T, uint* T1, uint* SA, uint n, uint m, uin
     // by the end position of its bucket in SA_1, resulting in the new string T1.
     bool current_s_type = false;
     for (int i = n1-1; i > 0; i--) {
-        bool previous_s_type = convert(i - 1) < convert(i) || (convert(i - 1) == convert(i) && current_s_type);
+        bool previous_s_type = scan_rtl_check_S_type(T1[i - 1], T1[i]);
 
         // if S-type
         if (previous_s_type) {
@@ -374,7 +374,7 @@ void getSALMS(uint *SA, uchar *T, uint *T1, uint n, uint n1, int level) {
     bool current_s_type = false;
 
     for (int i = n-2; i > 0; i--) {
-        bool previous_s_type = scan_rtl_check_S_type(T[i - 1], T[i]);
+        bool previous_s_type = convert(i - 1) < convert(i) || (convert(i - 1) == convert(i) && current_s_type);
 
         // if LMS
         if (!previous_s_type && current_s_type) {
@@ -493,7 +493,8 @@ void sacak(uchar* T, uint* SA, uint K, uint n, uint m, int level) {
 int main(int argc, char** argv) {
     // open file
     FILE *in = fopen(argv[1], "rb");
-   
+    FILE *out = fopen(argv[2], "wb");
+
     // determine file length
     fseek(in, 0, SEEK_END);
     int n = ftell(in) + 1; // +1 because of sentinel
@@ -509,7 +510,11 @@ int main(int argc, char** argv) {
     printArray(SA, n);
     
     double duration = (double)(clock() - start) / CLOCKS_PER_SEC;
-    fprintf(stderr, "\nSize: %u bytes, Time: %5.3f seconds\n", n - 1, duration);
+    fprintf(stderr, "Size: %u bytes, Time: %5.3f seconds\n", n - 1, duration);
+
+    for(uint i = 1; i < n; i++) {
+        fwrite((uchar *)(SA+i), 1, sizeof(int), out);
+    }
 
     // free allocated memory
     free(T);
