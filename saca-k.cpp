@@ -6,6 +6,9 @@
 typedef unsigned char uchar;
 typedef unsigned int uint;
 
+// gets i-th item from T with correct type (depending on level == 0 or level > 0)
+#define convert(i) ((level == 0) ? ((uchar*)T)[i] : ((int*)T)[i])
+
 // least negative integer
 const uint EMPTY = ((uint)1)<<(sizeof(uint)*8-1);
 
@@ -300,7 +303,7 @@ uint computeLexicographicNames(uchar* T, uint* T1, uint* SA, uint n, uint m, uin
         // see a character T[x + i] less than its preceding T[x + i - 1]. Now,
         // T[x + i - 1] must be L-type.
         uint i;
-        for (i = 1; x + i < n && T[x + i] >= T[x + i - 1]; i++);
+        for (i = 1; x + i < n && convert(x + i) >= convert(x + i - 1); i++);
 
         // Continue to traverse the remaining characters of the LMS-substring
         // and terminate when we see a character T[x + i] greater than its
@@ -308,8 +311,8 @@ uint computeLexicographicNames(uchar* T, uint* T1, uint* SA, uint n, uint m, uin
         // we know that the start of the succeeding LMS-substring has been
         // traversed and its position was previously recorded when we saw
         // T[x + i] < T[x + i - 1] the last time.
-        for (; x + i <= n && T[x + i] <= T[x + i - 1]; i++) {
-            if (x + i == n - 1 || T[x + i] > T[x + i - 1]) {
+        for (; x + i <= n && convert(x + i) <= convert(x + i - 1); i++) {
+            if (x + i == n - 1 || convert(x + i) < convert(x + i - 1)) {
                 lms_length = i + 1;
             }
         }
@@ -322,7 +325,7 @@ uint computeLexicographicNames(uchar* T, uint* T1, uint* SA, uint n, uint m, uin
                 uint current_pos = x + offset;
                 uint previous_pos = previous_x + offset;
                 is_different = current_pos == n - 1 || previous_pos == n - 1 ||
-                    T[current_pos] != T[previous_pos];
+                    convert(current_pos) != convert(previous_pos);
             }
         }
         if (is_different) {
@@ -350,7 +353,7 @@ uint computeLexicographicNames(uchar* T, uint* T1, uint* SA, uint n, uint m, uin
     // by the end position of its bucket in SA_1, resulting in the new string T1.
     bool current_s_type = false;
     for (int i = n1-1; i > 0; i--) {
-        bool previous_s_type = scan_rtl_check_S_type(T1[i - 1], T1[i]);
+        bool previous_s_type = convert(i - 1) < convert(i) || (convert(i - 1) == convert(i) && current_s_type);
 
         // if S-type
         if (previous_s_type) {
