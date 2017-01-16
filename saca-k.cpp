@@ -24,7 +24,8 @@ const uint EMPTY = ((uint)1)<<(sizeof(uint)*8-1);
                      is_processing_S_type | is_processing_LMS ? i > 0 : i < n; \
                      is_processing_S_type | is_processing_LMS ? i -= step : i += step)
 
-
+// Helper method to print an array, used for debugging purposes.
+// author: mfolnovic
 inline void printArray(void* arr, int n) {
     for (int i = 0; i < n; i++) {
         printf ("%d ", ((int*)arr)[i]);
@@ -32,6 +33,14 @@ inline void printArray(void* arr, int n) {
     printf("\n");
 }
 
+// Helper method for initializing the SA.
+// author: mfolnovic
+inline void initializeSA(uint* SA, uint n) {
+    memset(SA, 0, sizeof(uint) * n);
+}
+
+// Finds the end of buckets and shifts the values in SA.
+// author: pgombar
 inline uint shiftValue(int *SA, int start, int direction, bool check_empty) {
     uint count = 0, i;
     // The end item of the left/right-neighbouring bucket can be found by
@@ -57,6 +66,8 @@ inline uint shiftValue(int *SA, int start, int direction, bool check_empty) {
     return i;
 }
 
+// Helper method to shift items in SA in given direction (left/right).
+// author: mfolnovic
 inline int shiftCount(int *SA, int start, int count, int direction) {
     for (int i = 0; i < count; i++) {
         SA[start + i*direction] = SA[start + (i + 1) * direction];
@@ -64,6 +75,8 @@ inline int shiftCount(int *SA, int start, int count, int direction) {
     return count;
 }
 
+// Initializes buckets to point to its start or end, depending on the flag set_to_end.
+// author: mfolnovic
 void initializeBuckets(uchar* T, uint* bkt, uint K, uint n, bool set_to_end) {
     memset(bkt, 0, sizeof(uint) * K);
 
@@ -84,10 +97,8 @@ void initializeBuckets(uchar* T, uint* bkt, uint K, uint n, bool set_to_end) {
     }
 }
 
-inline void initializeSA(uint* SA, uint n) {
-    memset(SA, 0, sizeof(uint) * n);
-}
-
+// Computes the end of each bucket in SA and puts the sorted LMS-suffixes from T into their corresponding bucket in SA, from the end to the start of each bucket.
+// author: mfolnovic
 void fillLMSBuckets0(uchar* T, uint* SA, uint* bkt, uint K, uint n) {
     bool current_s_type = false;
 
@@ -111,6 +122,8 @@ void fillLMSBuckets0(uchar* T, uint* SA, uint* bkt, uint K, uint n) {
     SA[0] = n - 1;
 }
 
+// Performs induced sorting of LMS-substrings or suffixes (depending on the flag) at level 0.
+// author: mfolnovic
 void inducedSort0(uchar* T, uint* SA, uint* bkt, uint K, uint n, bool processing_S_type, bool suffix) {
     // initialize buckets to start/end of each bucket
     initializeBuckets(T, bkt, K, n, /* set_to_end */ processing_S_type);
@@ -142,9 +155,8 @@ void inducedSort0(uchar* T, uint* SA, uint* bkt, uint K, uint n, bool processing
     }
 }
 
-/*
-  processing_type: 0 - LMS, 1 - S-type, 2 - L-type
-*/
+// Performs induced sorting of LMS-substrings or suffixes (depending on the flag) at level 1. The parameter processing_type is defined as follows: 0 - LMS, 1 - S-type, 2 - L-type.
+// author: pgombar
 void inducedSort1(int* T, int* SA, uint n, int processing_type, bool suffix) {
     int step = 1;
 
@@ -267,6 +279,8 @@ void inducedSort1(int* T, int* SA, uint n, int processing_type, bool suffix) {
     }
 }
 
+// Performs problem reduction, reusing SA.
+// author: mfolnovic
 uint problemReduction(uint* SA, uint** T1, uint** SA1, uint n, uint m, int level) {
     uint n1 = 0;
 
@@ -282,6 +296,8 @@ uint problemReduction(uint* SA, uint** T1, uint** SA1, uint n, uint m, int level
     return n1;
 }
 
+// Produces names for LMS-substrings of T to get reduced string T1.
+// author: mfolnovic
 uint computeLexicographicNames(uchar* T, uint* T1, uint* SA, uint n, uint m, uint n1, int level) {
     // init
     for (uint i = n1; i < n; i++) {
@@ -367,7 +383,8 @@ uint computeLexicographicNames(uchar* T, uint* T1, uint* SA, uint n, uint m, uin
     return n_names;
 }
 
-// finds LMS positions in T and stores it in T1 (in text order)
+// Finds LMS-substring positions in T and stores them in T1 (in text order).
+// author: pgombar
 void getSALMS(uint *SA, uchar *T, uint *T1, uint n, uint n1, int level) {
     uint j = n1 - 1;
     T1[j--] = n - 1;
@@ -393,6 +410,8 @@ void getSALMS(uint *SA, uchar *T, uint *T1, uint n, uint n1, int level) {
     }
 }
 
+// Puts suffixes in place in SA at level 0.
+// author: pgombar
 void putSuffix0(uint *SA, uchar *T, uint *bkt, uint n, uint K, int n1) {
     // find the ends of each bucket
     initializeBuckets(T, bkt, K, n, true);
@@ -406,6 +425,8 @@ void putSuffix0(uint *SA, uchar *T, uint *bkt, uint n, uint K, int n1) {
     SA[0] = n - 1; // set the sentinel
 }
 
+// Puts suffixes in place in SA at level 1.
+// author: pgombar
 void putSuffix1(int *SA, int *T, int n1) {
     int pos, curr, prev = -1;
 
@@ -422,6 +443,8 @@ void putSuffix1(int *SA, int *T, int n1) {
     }
 }
 
+// Main algorithm method, performs SACA-K in 4 stages.
+// authors: mfolnovic, pgombar
 void sacak(uchar* T, uint* SA, uint K, uint n, uint m, int level) {
     uint *bkt = NULL;
 
@@ -507,10 +530,10 @@ int main(int argc, char** argv) {
 
     clock_t start = clock();
     sacak(T, SA, 256, n, n, 0);
-    printArray(SA, n);
+    // printArray(SA, n);
     
     double duration = (double)(clock() - start) / CLOCKS_PER_SEC;
-    fprintf(stderr, "Size: %u bytes, Time: %5.3f seconds\n", n - 1, duration);
+    fprintf(stderr, "Time: %5.3f seconds\n", duration);
 
     for(uint i = 1; i < n; i++) {
         fwrite((uchar *)(SA+i), 1, sizeof(int), out);
