@@ -1,0 +1,6 @@
+Command line: /home/mfolnovic/Downloads/tmp/cgmemtime/cgmemtime -o measurements.txt ./a.out corpus/kernel out
+Real time:   58.576 s
+CPU time:   50.580 s
+User time:   49.713 s
+System time:    0.867 s
+Maximum RSS: 1232 MB

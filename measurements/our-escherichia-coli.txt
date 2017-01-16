@@ -1,0 +1,6 @@
+Command line: /home/mfolnovic/Downloads/tmp/cgmemtime/cgmemtime -o measurements.txt ./a.out corpus/Escherichia_coli.HUSEC2011CHR1.dna.chromosome.Chromosome.fa out
+Real time:    0.640 s
+CPU time:    0.617 s
+User time:    0.603 s
+System time:    0.013 s
+Maximum RSS: 27 MB

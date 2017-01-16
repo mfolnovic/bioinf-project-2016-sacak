@@ -1,0 +1,35 @@
+sources:
+our saca-k:         35.835 seconds      1007 MB
+reference saca-k:   33.131 seconds      1007 MB
+
+kernel:
+our saca-k:         46.007 seconds      1232 MB
+reference saca-k:   44.579 seconds      1232 MB
+
+fib41:
+our saca-k:         47.984 seconds      1279 MB
+reference saca-k:   48.814 seconds      1279 MB
+
+Salmonella Enterica:
+our saca-k:         0.460 seconds       25 MB
+reference saca-k:   0.438 seconds       25 MB
+
+Escherichia Coli:
+our saca-k:         0.518 seconds       27 MB
+reference saca-k:   0.499 seconds       27 MB
+
+synthetic.100000
+our saca-k:         0.007 seconds       2 MB
+reference saca-k:   0.010 seconds       2 MB
+
+syntethic.1000000
+our saca-k:         0.081 seconds       6 MB
+reference saca-k:   0.090 seconds       7 MB
+
+                    reference           our
+sources.10MB:       0.993 seconds       1.041 seconds
+sources.20MB:       2.266 seconds       2.456 seconds
+sources.40MB:       5.570 seconds       5.914 seconds
+sources.60MB:       9.088 seconds       9.609 seconds
+sources.100MB:      15.583 seconds      16.379 seconds
+sources.200MB:      38.414 seconds      39.659 seconds

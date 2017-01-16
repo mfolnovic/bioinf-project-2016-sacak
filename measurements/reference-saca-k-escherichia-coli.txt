@@ -1,0 +1,6 @@
+Command line: /home/mfolnovic/Downloads/tmp/cgmemtime/cgmemtime -o ref-measurements.txt reference/saca-k/saca-k corpus/Escherichia_coli.HUSEC2011CHR1.dna.chromosome.Chromosome.fa out2
+Real time:    0.620 s
+CPU time:    0.600 s
+User time:    0.583 s
+System time:    0.017 s
+Maximum RSS: 27 MB

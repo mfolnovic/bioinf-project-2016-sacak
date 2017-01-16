@@ -1,0 +1,6 @@
+Command line: /home/mfolnovic/Downloads/tmp/cgmemtime/cgmemtime -o measurements.txt ./a.out corpus/synthetic.100000 out
+Real time:    0.034 s
+CPU time:    0.010 s
+User time:    0.007 s
+System time:    0.003 s
+Maximum RSS: 2 MB

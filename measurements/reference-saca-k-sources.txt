@@ -1,0 +1,6 @@
+Command line: /home/mfolnovic/Downloads/tmp/cgmemtime/cgmemtime -o measurements.txt ./saca-k ../../corpus/sources ../../out2
+Real time:   37.494 s
+CPU time:   36.787 s
+User time:   36.180 s
+System time:    0.607 s
+Maximum RSS: 1007 MB

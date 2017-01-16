@@ -1,0 +1,6 @@
+Command line: /home/mfolnovic/Downloads/tmp/cgmemtime/cgmemtime -o ref-measurements.txt reference/saca-k/saca-k corpus/Salmonella_enterica.ASM78381v1.dna.toplevel.fa out2
+Real time:    0.590 s
+CPU time:    0.530 s
+User time:    0.513 s
+System time:    0.017 s
+Maximum RSS: 25 MB

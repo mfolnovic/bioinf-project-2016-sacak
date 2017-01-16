@@ -1,0 +1,6 @@
+Command line: /home/mfolnovic/Downloads/tmp/cgmemtime/cgmemtime -o measurements.txt ./a.out corpus/fib41 out
+Real time:   60.736 s
+CPU time:   52.610 s
+User time:   51.713 s
+System time:    0.897 s
+Maximum RSS: 1279 MB

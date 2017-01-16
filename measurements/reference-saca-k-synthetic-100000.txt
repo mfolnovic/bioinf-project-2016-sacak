@@ -1,0 +1,6 @@
+Command line: /home/mfolnovic/Downloads/tmp/cgmemtime/cgmemtime -o ref-measurements.txt reference/saca-k/saca-k corpus/synthetic.100000 out2
+Real time:    0.038 s
+CPU time:    0.010 s
+User time:    0.007 s
+System time:    0.003 s
+Maximum RSS: 2 MB

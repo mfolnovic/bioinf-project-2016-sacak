@@ -1,0 +1,6 @@
+Command line: /home/mfolnovic/Downloads/tmp/cgmemtime/cgmemtime -o measurements.txt ./a.out corpus/sources out
+Real time:   48.190 s
+CPU time:   39.647 s
+User time:   38.873 s
+System time:    0.773 s
+Maximum RSS: 1007 MB
